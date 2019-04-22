@@ -5,7 +5,6 @@ class Profile {
         this.lastName = name.lastName;
         this.password = password;
         this.isAuthorized = false;
-        this._cypher = '';
     }
 
     getInfo () { 
@@ -20,7 +19,19 @@ class Profile {
     createUser (callback) {
         return ApiConnector.createUser(this.getInfo(), (err, data) => {
             console.log(`Creating user ${this.username}`);
-            callback(err, data);      
+            callback(err, data); 
+
+            if(data) {
+                this.performLogin(err => {
+                    
+                    if (err) {
+                        console.error(err.message);
+                    } else {
+                        console.log(`${this.username} is authorized!`);
+                    };
+
+                });
+            }
         });
     }
 
@@ -59,15 +70,6 @@ function main () {
             console.log(`${data.username} is created!`);
         };
     });
-    
-    Elena.performLogin((err, data) => {
-        if (err) {
-            console.error(err.message);
-        } else {
-            console.log(`${data.username} is authorized!`);
-        };
-    });
-
 };
 
 main();

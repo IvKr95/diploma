@@ -5,23 +5,28 @@ class Profile {
         this.lastName = name.lastName;
         this.password = password;
         this.isAuthorized = false;
+        this._cypher = '';
     }
 
-    createUser ({username, name, password}, callback) {
-        return ApiConnector.createUser({username, name, password}, (err, data) => {
-            console.log(`Creating user ${username}`);  
-            data.password = password;
-            console.log(data)
-            callback(err, data);
+    getInfo () { 
+        return {username: this.username,
+                    name: {
+                            firstName: this.firstName, 
+                            lastName: this.lastName
+                    },
+                password: this.password};
+    }
+
+    createUser (callback) {
+        return ApiConnector.createUser(this.getInfo(), (err, data) => {
+            console.log(`Creating user ${this.username}`);
+            callback(err, data);      
         });
     }
 
-    performLogin ({username, password}, callback) {
-        return ApiConnector.performLogin({username, password}, (err, data) => {
+    performLogin (callback) {
+        return ApiConnector.performLogin({username: this.username, password: this.password}, (err, data) => {
             console.log(`Authorizing user ${this.username}`);
-            console.log(username)
-            console.log(password)
-
             callback(err, data);
         });
     }
@@ -39,13 +44,7 @@ function main () {
         password: 'el93tulen'
     });
     //сначала создаем и авторизуем пользователя
-    Ivan.createUser({
-
-        username: Ivan.username,
-        name: { firstName: Ivan.firstName, lastName: Ivan.lastName },
-        password: Ivan.password
-
-    }, (err, data) => {
+    Ivan.createUser((err, data) => {
         if (err) {
             console.error('Error during creating a user');
         } else {
@@ -53,13 +52,7 @@ function main () {
         };
     });
 
-    Elena.createUser({
-
-        username: Elena.username,
-        name: { firstName: Elena.firstName, lastName: Elena.lastName },
-        password: Elena.password
-
-    }, (err, data) => {
+    Elena.createUser((err, data) => {
         if (err) {
             console.error('Error during creating a user');
         } else {
@@ -67,13 +60,9 @@ function main () {
         };
     });
     
-    Elena.performLogin({
-        username: Elena.username,
-        password: Elena.password
-    }, 
-        (err, data) => {
+    Elena.performLogin((err, data) => {
         if (err) {
-            console.error(err);
+            console.error(err.message);
         } else {
             console.log(`${data.username} is authorized!`);
         };

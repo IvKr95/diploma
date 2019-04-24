@@ -18,7 +18,7 @@ class Profile {
     createUser (callback) {
         return ApiConnector.createUser(this.data, (err, data) => {
             console.log(`Creating user ${this.username}`);
-            callback(err, data);
+            callback(err, data); 
         });
     }
 
@@ -32,8 +32,10 @@ class Profile {
     addMoney({ currency, amount }, callback) {
         return ApiConnector.addMoney({ currency, amount }, (err, data) => {
             console.log(`Adding ${amount} of ${currency} to ${this.username}`);
+
             callback(err, data);
-            this.wallet[currency] += amount;
+            this.wallet = data.wallet;
+
             console.log(`Added ${amount} ${currency} to ${this.username}`)
         });
     }
@@ -45,9 +47,16 @@ class Profile {
         });
     }
 
-    transferMoney({ to, amount }, callback) {
+    transferMoney ({ to, amount }, callback) {
         return ApiConnector.transferMoney( {to, amount}, (err, data) => {
             console.log(`Transfering ${amount} of Netcoins to ${to}`)
+            callback(err, data, {to, amount});
+        });
+    }
+
+    static getStocks (callback) {
+        return ApiConnector.getStocks( (err, data) => {
+            console.log('Getting stocks info');
             callback(err, data);
         });
     }
@@ -67,21 +76,27 @@ function main () {
     //сначала создаем и авторизуем пользователя
     
     Ivan.createUser((err, data) => {
+
         if (err) {
             console.error('Error during creating a user');
         } else {
             console.log(`${data.username} is created!`);
+            this.isCreated = true;
+
             Ivan.performLogin((err, data) => {
+
                 if (err) {
                     console.error(err.message);
                 } else {
                     console.log(`${Ivan.username} is authorized!`); 
+                    this.isAuthorized = true;
+
                     Ivan.addMoney({ currency: 'EUR', amount: 500000 }, (err, data) => {
                         
                         if (err) {
                             console.error(`Error during adding money to ${Ivan.username}`);
                         };
-
+                        
                         Ivan.convertMoney({
 
                             fromCurrency: 'EUR',
@@ -89,23 +104,30 @@ function main () {
                             targetAmount: 36000
 
                         }, (err, data) => {
-                            if(data) console.log("Converted to coins", data);
 
-                            
+                            if(data) {
+                                console.log("Converted to coins", data);
+                                
+                                Ivan.wallet = data.wallet;
+
                                 Ivan.transferMoney({
 
                                     to: Elena.username,
-                                    amount: 30000
+                                    amount: 35000
                             
-                                }, (err, data) => {
-                            
+                                }, ( err, data, {to, amount}) => {
+                        
                                     if(data) {
-                                        console.log('Elena has got 36000 NETCOINS')
+                                        console.log(`${to} has got ${amount} NETCOINS`);
                                     } else {
-                                        console.error(err)
-                                    }
+                                        console.error(err);
+                                    };
+
                                 });
-                            
+
+                            } else {
+                                console.error(err);
+                            }
                         });
                     });
                 };
@@ -113,23 +135,28 @@ function main () {
         };
     });
     
-    Elena.createUser((err, data) => {
+    Elena.createUser(( err, data ) => {
+
         if (err) {
             console.error('Error during creating a user');
         } else {
             console.log(`${data.username} is created!`);
-            Elena.performLogin((err, data) => {
+
+            Elena.performLogin(( err, data ) => {
                 if (err) {
                     console.error(err.message);
                 } else {
-                    console.log(`${Elena.username} is authorized!`);   
-                    
+                    console.log(`${Elena.username} is authorized!`);      
                 };
             });
         }; 
     });
 
-    
+    let getStocksIntId = setInterval( () => {
+        Profile.getStocks(( err, data ) => {
+            return data ? data : err;
+        });
+    }, 1000);
 };
 
 main();

@@ -107,23 +107,9 @@ function main () {
 
                             if(data) {
                                 console.log("Converted to coins", data);
-                                
                                 Ivan.wallet = data.wallet;
 
-                                Ivan.transferMoney({
-
-                                    to: Elena.username,
-                                    amount: 35000
-                            
-                                }, ( err, data, {to, amount}) => {
-                        
-                                    if(data) {
-                                        console.log(`${to} has got ${amount} NETCOINS`);
-                                    } else {
-                                        console.error(err);
-                                    };
-
-                                });
+                                transferMoney(Ivan, Elena);
 
                             } else {
                                 console.error(err);
@@ -152,6 +138,12 @@ function main () {
         }; 
     });
 
+    getStocks();
+};
+
+main();
+
+function getStocks () {
     let getStocksIntId = setInterval( () => {
         Profile.getStocks(( err, data ) => {
             return data ? data : err;
@@ -159,4 +151,18 @@ function main () {
     }, 1000);
 };
 
-main();
+function transferMoney (user, user2) {
+    user.transferMoney({
+
+        to: user2.username,
+        amount: 33000
+
+    }, ( err, data, {to, amount}) => {
+
+        if(data) {
+            console.log(`${to} has got ${amount} NETCOINS`);
+        } else {
+            console.error(err);
+        };
+    });
+};
